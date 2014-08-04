@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/task 
+		http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+
+	<!-- Define your application beans here. They will be available to the beans 
+		defined in your web-context because it is a sub-context. Beans defined in 
+		the web-context will not be available in the application context. -->
+
+	<context:component-scan base-package="com.lagodiuk.track">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<context:annotation-config />
+
+	<task:scheduler id="myScheduler" pool-size="10" />
+	<task:annotation-driven scheduler="myScheduler" />
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath*:app.conf</value>
+				<value>file://${confdir}/*.conf</value>
+			</list>
+		</property>
+	</bean>
+
+</beans>

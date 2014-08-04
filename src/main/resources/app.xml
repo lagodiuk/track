@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+	<bean class="org.eclipse.jetty.server.Server" init-method="start"
+		destroy-method="stop">
+		<property name="threadPool">
+			<bean id="ThreadPool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
+				<property name="minThreads" value="5" />
+				<property name="maxThreads" value="40" />
+			</bean>
+		</property>
+
+		<property name="connectors">
+			<list>
+				<bean id="Connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
+					<property name="port" value="${server.port}" />
+					<property name="forwarded" value="true" />
+				</bean>
+			</list>
+		</property>
+
+		<property name="handler">
+			<bean class="org.eclipse.jetty.webapp.WebAppContext">
+				<property name="contextPath" value="/" />
+				<property name="war"
+					value="#{ new org.springframework.core.io.ClassPathResource('/webapp').getURI().toString() }" />
+			</bean>
+		</property>
+	</bean>
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath*:app.conf</value>
+				<value>file://${confdir}/*.conf</value>
+			</list>
+		</property>
+	</bean>
+</beans>
