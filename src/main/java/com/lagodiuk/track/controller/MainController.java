@@ -50,13 +50,20 @@ public class MainController {
 		trackScript.setAttribute("src", "/s/track.js");
 		page.getHead().appendChild(trackScript);
 
-		return "<!DOCTYPE html>" + page.asXml();
+		String response = "<!DOCTYPE html>" + page.asXml();
+		response = response.replaceAll("\\<\\?xml version=\"1\\.0\" encoding=\"UTF-8\"\\?\\>", "");
+		response = response.replaceAll("\\/\\/\\<\\!\\[CDATA\\[", "");
+		response = response.replaceAll("\\/\\/\\]\\]\\>", "");
+		return response;
 	}
 
 	private int wrapTextNodes(DomNode node, HtmlPage page, int counter) throws Exception {
 		if (node instanceof HtmlScript) {
 			HtmlScript htmlSript = (HtmlScript) node;
-			htmlSript.setAttribute("src", page.getFullyQualifiedUrl(htmlSript.getSrcAttribute()).toString());
+			String srcAttribute = htmlSript.getSrcAttribute();
+			if ((srcAttribute != null) && (!srcAttribute.isEmpty())) {
+				htmlSript.setAttribute("src", page.getFullyQualifiedUrl(srcAttribute).toString());
+			}
 			return counter;
 		}
 		if (node.getNodeType() == DomNode.TEXT_NODE) {
