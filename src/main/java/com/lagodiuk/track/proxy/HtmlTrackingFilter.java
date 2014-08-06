@@ -4,8 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.zip.GZIPInputStream;
 
@@ -16,7 +14,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.tika.config.TikaConfig;
@@ -34,24 +31,7 @@ final class HtmlTrackingFilter implements Filter {
 	public void doFilter(final ServletRequest request, final ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		final ByteArrayResponse wrappedResponse = new ByteArrayResponse((HttpServletResponse) response);
 
-		final HttpServletRequest hreq = new HttpServletRequestWrapper((HttpServletRequest) request) {
-			@Override
-			public String getHeader(String name) {
-				if (name.equals("If-None-Match")) {
-					return "123";
-				}
-				return super.getHeader(name);
-			}
-
-			@Override
-			public Enumeration<String> getHeaders(String name) {
-				// http://stackoverflow.com/questions/20978189/how-304-not-modified-works
-				if (name.equals("If-None-Match")) {
-					return Collections.enumeration(Arrays.asList("123"));
-				}
-				return super.getHeaders(name);
-			}
-		};
+		final HttpServletRequest hreq = new Anti304HttpRequestWrapper((HttpServletRequest) request);
 
 		try {
 			chain.doFilter(hreq, wrappedResponse);
