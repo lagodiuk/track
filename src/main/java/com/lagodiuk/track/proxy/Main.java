@@ -1,9 +1,8 @@
-package com.lagodiuk.track.controller;
+package com.lagodiuk.track.proxy;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,15 +14,12 @@ import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.Detector;
@@ -44,25 +40,6 @@ import org.eclipse.jetty.servlets.ProxyServlet;
 public class Main {
 
 	private static final class MyDumpFilter implements Filter {
-		private static final class ByteArrayResponse extends HttpServletResponseWrapper {
-			private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			private ByteArrayResponse(HttpServletResponse response) {
-				super(response);
-			}
-			@Override
-			public PrintWriter getWriter() {
-				return new PrintWriter(this.baos);
-			}
-			@Override
-			public ServletOutputStream getOutputStream() {
-				return new ByteArrayServletStream(this.baos);
-			}
-
-			public ByteArrayOutputStream getBaos() throws Exception {
-				this.baos.flush();
-				return this.baos;
-			}
-		}
 		@Override
 		public void init(FilterConfig filterConfig) throws ServletException {
 			// TODO Auto-generated method stub
@@ -134,31 +111,6 @@ public class Main {
 
 			HttpServletRequest hreq = (HttpServletRequest) request;
 			HttpServletResponse hresp = (HttpServletResponse) response;
-
-			// String contentType = wrappedResponse.getHeader("Content-Type");
-			// if ((contentType != null) && contentType.contains("text/html")) {
-			// String charset = "utf-8";
-			// if (contentType.matches("^.*charset=(.+)$")) {
-			// charset = contentType.replaceAll("^.*charset=(.+)$", "$1");
-			// }
-			//
-			// byte[] decodedBytes = bytes;
-			// String contentEncoding =
-			// wrappedResponse.getHeader("Content-Encoding");
-			// if ((contentEncoding != null) &&
-			// contentEncoding.contains("gzip")) {
-			// GZIPInputStream gzip = new GZIPInputStream(new
-			// ByteArrayInputStream(bytes));
-			// ByteArrayOutputStream tmp = new ByteArrayOutputStream();
-			// int c;
-			// while ((c = gzip.read()) != -1) {
-			// tmp.write(c);
-			// }
-			// decodedBytes = tmp.toByteArray();
-			// }
-			//
-			// System.out.println(new String(decodedBytes, charset));
-			// }
 
 			String url = this.getFullURL(hreq);
 
@@ -261,42 +213,15 @@ public class Main {
 		}
 	}
 
-	public static class MyProxyServlet extends ProxyServlet {
-		@Override
-		public void init(ServletConfig config) throws ServletException {
-			super.init(config);
-			// System.out.println(">> init done !");
-		}
-
-		@Override
-		public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-			// System.out.println(">>> got a request ! " + req.getServerName());
-			super.service(req, res);
-		}
-	}
-
 	public static void main(String... args) throws Exception {
 		Server server = new Server(8080);
 
 		ServletHandler servletHandler = new ServletHandler();
-		servletHandler.addServletWithMapping(MyProxyServlet.class, "/*");
+		servletHandler.addServletWithMapping(ProxyServlet.class, "/*");
 		servletHandler.addFilterWithMapping(new FilterHolder(new MyDumpFilter()), "/*", EnumSet.allOf(DispatcherType.class));
 
 		server.setHandler(servletHandler);
 		server.start();
 		server.join();
-	}
-	private static class ByteArrayServletStream extends ServletOutputStream {
-
-		private ByteArrayOutputStream baos;
-
-		ByteArrayServletStream(ByteArrayOutputStream baos) {
-			this.baos = baos;
-		}
-
-		@Override
-		public void write(int param) throws IOException {
-			this.baos.write(param);
-		}
 	}
 }
