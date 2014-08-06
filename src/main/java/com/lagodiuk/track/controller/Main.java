@@ -215,7 +215,6 @@ public class Main {
 					// TODO
 
 					String bytesString = new String(bytes);
-					System.out.println(bytesString);
 					if (bytesString.toLowerCase().contains("<!doctype html>")) {
 
 						HtmlEncodingDetector encodingDetector = new HtmlEncodingDetector();
