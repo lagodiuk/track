@@ -4,9 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Enumeration;
 import java.util.zip.GZIPInputStream;
 
 import javax.servlet.DispatcherType;
@@ -19,6 +21,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
@@ -55,7 +58,8 @@ public class Main {
 				return new ByteArrayServletStream(this.baos);
 			}
 
-			public ByteArrayOutputStream getBaos() {
+			public ByteArrayOutputStream getBaos() throws Exception {
+				this.baos.flush();
 				return this.baos;
 			}
 		}
@@ -68,12 +72,32 @@ public class Main {
 		public void doFilter(final ServletRequest request, final ServletResponse response, FilterChain chain) throws IOException, ServletException {
 			final ByteArrayResponse wrappedResponse = new ByteArrayResponse((HttpServletResponse) response);
 
+			final HttpServletRequest hreq = new HttpServletRequestWrapper((HttpServletRequest) request) {
+				@Override
+				public String getHeader(String name) {
+					if (name.equals("If-None-Match")) {
+						return "123";
+					}
+					return super.getHeader(name);
+				}
+
+				@Override
+				public Enumeration<String> getHeaders(String name) {
+					// http://stackoverflow.com/questions/20978189/how-304-not-modified-works
+					if (name.equals("If-None-Match")) {
+						return Collections.enumeration(Arrays.asList("123"));
+					}
+					return super.getHeaders(name);
+				}
+			};
+
 			try {
-				chain.doFilter(request, wrappedResponse);
+				chain.doFilter(hreq, wrappedResponse);
 			} finally {
 				// see: org.eclipse.jetty.servlets.GzipFilter
 
-				Continuation continuation = ContinuationSupport.getContinuation(request);
+				Continuation continuation = ContinuationSupport.getContinuation(hreq);
+
 				if (continuation.isSuspended() && continuation.isResponseWrapped()) {
 
 					continuation.addContinuationListener(new ContinuationListener() {
@@ -86,7 +110,7 @@ public class Main {
 						@Override
 						public void onComplete(Continuation continuation) {
 							try {
-								MyDumpFilter.this.process(request, response, wrappedResponse);
+								MyDumpFilter.this.process(hreq, response, wrappedResponse);
 							} catch (Exception e) {
 								e.printStackTrace();
 								System.exit(0);
@@ -95,13 +119,16 @@ public class Main {
 					});
 
 				} else {
-					this.process(request, response, wrappedResponse);
+					try {
+						this.process(hreq, response, wrappedResponse);
+					} catch (Exception e) {
+						throw new ServletException(e);
+					}
 				}
 			}
 		}
 
-		private void process(ServletRequest request, final ServletResponse response, final ByteArrayResponse wrappedResponse)
-				throws UnsupportedEncodingException, IOException {
+		private void process(ServletRequest request, final ServletResponse response, final ByteArrayResponse wrappedResponse) throws Exception {
 
 			byte[] bytes = wrappedResponse.getBaos().toByteArray();
 
@@ -141,8 +168,18 @@ public class Main {
 			MediaType type = detector.detect(new ByteArrayInputStream(bytes), metadata);
 
 			StringBuilder sb = new StringBuilder();
-			sb.append(url).append("\n")
-					.append(type.getType()).append(" ")
+			sb.append(url).append("\n");
+			sb.append("Request headers:").append("\n");
+			Enumeration<String> en = hreq.getHeaderNames();
+			while (en.hasMoreElements()) {
+				String h = en.nextElement();
+				sb.append(h).append("\t").append(hreq.getHeader(h)).append("\n");
+			}
+			sb.append("Response headers:").append("\n");
+			for (String h : hresp.getHeaderNames()) {
+				sb.append(h).append("\t").append(hresp.getHeaders(h)).append("\n");
+			}
+			sb.append(type.getType()).append(" ")
 					.append(type.getSubtype()).append(" ")
 					.append(type.getBaseType()).append("\n");
 
@@ -176,9 +213,21 @@ public class Main {
 					}
 				} catch (Exception e) {
 					// TODO
+
+					String bytesString = new String(bytes);
+					System.out.println(bytesString);
+					if (bytesString.toLowerCase().contains("<!doctype html>")) {
+
+						HtmlEncodingDetector encodingDetector = new HtmlEncodingDetector();
+						Charset charset = encodingDetector.detect(new ByteArrayInputStream(bytes), metadata);
+						if (charset == null) {
+							charset = Charset.forName("utf-8");
+						}
+
+						sb.append("\n").append(new String(bytes, charset)).append("\n");
+					}
 				}
 			}
-
 			System.out.println(sb.toString());
 
 			response.getOutputStream().write(bytes);
@@ -238,7 +287,6 @@ public class Main {
 		server.start();
 		server.join();
 	}
-
 	private static class ByteArrayServletStream extends ServletOutputStream {
 
 		private ByteArrayOutputStream baos;
