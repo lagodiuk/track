@@ -29,16 +29,17 @@ final class HtmlTrackingFilter implements Filter {
 
 	@Override
 	public void doFilter(final ServletRequest request, final ServletResponse response, FilterChain chain) throws IOException, ServletException {
+
 		final ByteArrayResponse wrappedResponse = new ByteArrayResponse((HttpServletResponse) response);
 
-		final HttpServletRequest hreq = new Anti304HttpRequestWrapper((HttpServletRequest) request);
+		final HttpServletRequest wrappedRequest = new Anti304HttpRequestWrapper((HttpServletRequest) request);
 
 		try {
-			chain.doFilter(hreq, wrappedResponse);
+			chain.doFilter(wrappedRequest, wrappedResponse);
 		} finally {
 			// see: org.eclipse.jetty.servlets.GzipFilter
 
-			Continuation continuation = ContinuationSupport.getContinuation(hreq);
+			Continuation continuation = ContinuationSupport.getContinuation(wrappedRequest);
 
 			if (continuation.isSuspended() && continuation.isResponseWrapped()) {
 
@@ -52,7 +53,7 @@ final class HtmlTrackingFilter implements Filter {
 					@Override
 					public void onComplete(Continuation continuation) {
 						try {
-							HtmlTrackingFilter.this.process(hreq, response, wrappedResponse);
+							HtmlTrackingFilter.this.process(wrappedRequest, response, wrappedResponse);
 						} catch (Exception e) {
 							e.printStackTrace();
 							System.exit(0);
@@ -62,7 +63,7 @@ final class HtmlTrackingFilter implements Filter {
 
 			} else {
 				try {
-					this.process(hreq, response, wrappedResponse);
+					this.process(wrappedRequest, response, wrappedResponse);
 				} catch (Exception e) {
 					throw new ServletException(e);
 				}
