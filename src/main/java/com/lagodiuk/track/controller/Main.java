@@ -1,9 +1,13 @@
 package com.lagodiuk.track.controller;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.EnumSet;
+import java.util.zip.GZIPInputStream;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
@@ -14,9 +18,15 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.html.HtmlEncodingDetector;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
@@ -55,7 +65,7 @@ public class Main {
 
 		}
 		@Override
-		public void doFilter(ServletRequest request, final ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		public void doFilter(final ServletRequest request, final ServletResponse response, FilterChain chain) throws IOException, ServletException {
 			final ByteArrayResponse wrappedResponse = new ByteArrayResponse((HttpServletResponse) response);
 
 			try {
@@ -75,17 +85,8 @@ public class Main {
 
 						@Override
 						public void onComplete(Continuation continuation) {
-							byte[] bytes = wrappedResponse.getBaos().toByteArray();
 							try {
-								for (String s : wrappedResponse.getHeaderNames()) {
-									System.out.println(s + "\t" + wrappedResponse.getHeader(s));
-								}
-								String contentType = wrappedResponse.getContentType();
-								System.out.println(contentType);
-								if ((contentType != null) && contentType.contains("html")) {
-									System.out.println(new String(bytes, wrappedResponse.getCharacterEncoding()));
-								}
-								response.getOutputStream().write(bytes);
+								MyDumpFilter.this.process(request, response, wrappedResponse);
 							} catch (Exception e) {
 								e.printStackTrace();
 								System.exit(0);
@@ -94,16 +95,117 @@ public class Main {
 					});
 
 				} else {
-					byte[] bytes = wrappedResponse.getBaos().toByteArray();
-					String contentType = wrappedResponse.getContentType();
-					System.out.println(contentType);
-					if ((contentType != null) && contentType.contains("html")) {
-						System.out.println(new String(bytes, wrappedResponse.getCharacterEncoding()));
-					}
-					response.getOutputStream().write(bytes);
+					this.process(request, response, wrappedResponse);
 				}
 			}
 		}
+
+		private void process(ServletRequest request, final ServletResponse response, final ByteArrayResponse wrappedResponse)
+				throws UnsupportedEncodingException, IOException {
+
+			byte[] bytes = wrappedResponse.getBaos().toByteArray();
+
+			HttpServletRequest hreq = (HttpServletRequest) request;
+			HttpServletResponse hresp = (HttpServletResponse) response;
+
+			// String contentType = wrappedResponse.getHeader("Content-Type");
+			// if ((contentType != null) && contentType.contains("text/html")) {
+			// String charset = "utf-8";
+			// if (contentType.matches("^.*charset=(.+)$")) {
+			// charset = contentType.replaceAll("^.*charset=(.+)$", "$1");
+			// }
+			//
+			// byte[] decodedBytes = bytes;
+			// String contentEncoding =
+			// wrappedResponse.getHeader("Content-Encoding");
+			// if ((contentEncoding != null) &&
+			// contentEncoding.contains("gzip")) {
+			// GZIPInputStream gzip = new GZIPInputStream(new
+			// ByteArrayInputStream(bytes));
+			// ByteArrayOutputStream tmp = new ByteArrayOutputStream();
+			// int c;
+			// while ((c = gzip.read()) != -1) {
+			// tmp.write(c);
+			// }
+			// decodedBytes = tmp.toByteArray();
+			// }
+			//
+			// System.out.println(new String(decodedBytes, charset));
+			// }
+
+			String url = this.getFullURL(hreq);
+
+			Metadata metadata = new Metadata();
+			metadata.set(Metadata.LOCATION, url);
+			Detector detector = TikaConfig.getDefaultConfig().getDetector();
+			MediaType type = detector.detect(new ByteArrayInputStream(bytes), metadata);
+
+			StringBuilder sb = new StringBuilder();
+			sb.append(url).append("\n")
+					.append(type.getType()).append(" ")
+					.append(type.getSubtype()).append(" ")
+					.append(type.getBaseType()).append("\n");
+
+			if (type.getSubtype().contains("html")) {
+				HtmlEncodingDetector encodingDetector = new HtmlEncodingDetector();
+				Charset charset = encodingDetector.detect(new ByteArrayInputStream(bytes), metadata);
+				if (charset == null) {
+					charset = Charset.forName("utf-8");
+				}
+
+				sb.append("\n").append(new String(bytes, charset)).append("\n");
+			}
+
+			if (type.getSubtype().equals("x-gzip") || type.getSubtype().equals("octet-stream")) {
+				try {
+					byte[] ungzipped = this.unGzip(bytes);
+					type = detector.detect(new ByteArrayInputStream(ungzipped), metadata);
+
+					sb.append(type.getType()).append(" ")
+							.append(type.getSubtype()).append(" ")
+							.append(type.getBaseType()).append("\n");
+
+					if (type.getSubtype().contains("html")) {
+						HtmlEncodingDetector encodingDetector = new HtmlEncodingDetector();
+						Charset charset = encodingDetector.detect(new ByteArrayInputStream(ungzipped), metadata);
+						if (charset == null) {
+							charset = Charset.forName("utf-8");
+						}
+
+						sb.append("\n").append(new String(ungzipped, charset)).append("\n");
+					}
+				} catch (Exception e) {
+					// TODO
+				}
+			}
+
+			System.out.println(sb.toString());
+
+			response.getOutputStream().write(bytes);
+		}
+
+		private byte[] unGzip(byte[] bytes) throws Exception {
+			GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(bytes));
+			ByteArrayOutputStream tmp = new ByteArrayOutputStream();
+			int c;
+			while ((c = gzip.read()) != -1) {
+				tmp.write(c);
+			}
+			byte[] decodedBytes = tmp.toByteArray();
+			return decodedBytes;
+		}
+
+		private String getFullURL(HttpServletRequest request) {
+			StringBuffer requestURL = request.getRequestURL();
+			String queryString = request.getQueryString();
+
+			if (queryString == null) {
+				return requestURL.toString();
+			} else {
+				return requestURL.append('?').append(queryString).toString();
+			}
+		}
+
 		@Override
 		public void destroy() {
 			// TODO Auto-generated method stub
@@ -115,12 +217,12 @@ public class Main {
 		@Override
 		public void init(ServletConfig config) throws ServletException {
 			super.init(config);
-			System.out.println(">> init done !");
+			// System.out.println(">> init done !");
 		}
 
 		@Override
 		public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-			System.out.println(">>> got a request ! " + req.getServerName());
+			// System.out.println(">>> got a request ! " + req.getServerName());
 			super.service(req, res);
 		}
 	}
@@ -130,7 +232,7 @@ public class Main {
 
 		ServletHandler servletHandler = new ServletHandler();
 		servletHandler.addServletWithMapping(MyProxyServlet.class, "/*");
-		servletHandler.addFilterWithMapping(new FilterHolder(new MyDumpFilter()), "/*", EnumSet.of(DispatcherType.REQUEST));
+		servletHandler.addFilterWithMapping(new FilterHolder(new MyDumpFilter()), "/*", EnumSet.allOf(DispatcherType.class));
 
 		server.setHandler(servletHandler);
 		server.start();
