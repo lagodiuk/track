@@ -92,7 +92,7 @@ final class HtmlTrackingFilter implements Filter {
 
 	private void process(ServletRequest request, final ServletResponse response, final ByteArrayResponse wrappedResponse) throws Exception {
 
-		byte[] bytes = wrappedResponse.getBaos().toByteArray();
+		byte[] bytes = wrappedResponse.getResponseBody();
 
 		HttpServletRequest hreq = (HttpServletRequest) request;
 		HttpServletResponse hresp = (HttpServletResponse) response;
