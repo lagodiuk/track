@@ -27,6 +27,7 @@ import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
@@ -216,12 +217,24 @@ final class HtmlTrackingFilter implements Filter {
 		// Auto-generated method stub
 	}
 
-	private byte[] processHtmlResponseBody(byte[] body, Charset charset) {
+	private byte[] processHtmlResponseBody(byte[] responseBody, Charset charset) {
 		try {
 
-			Document doc = Jsoup.parse(new ByteArrayInputStream(body), charset.name(), "");
+			Document doc = Jsoup.parse(new ByteArrayInputStream(responseBody), charset.name(), "");
+			Element body = doc.getElementsByTag("body").first();
+			Element head = doc.getElementsByTag("head").first();
 
-			this.wrapTextNodes(doc.getElementsByTag("body").first(), 0);
+			this.wrapTextNodes(body, 0);
+
+			body.appendElement("button")
+					.attr("style", "position:fixed; top:0px;left:0px; z-index:200")
+					.text("What do I see?");
+
+			head.appendElement("script")
+					.attr("type", "text/javascript")
+					.attr("src", "http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js");
+
+			head.append("<script type=\"text/javascript\">$(document).ready(function(){$('button').click(function(){var e=[];$('.track').each(function(){var t=$(this).offset(),n=$(window).scrollLeft(),r=$(window).scrollTop(),i=$(window).height(),s=$(window).width(),o=$(this).outerHeight(),u=$(this).outerWidth();$(this).css('background-color','');if(t.left>=n&&t.top>=r&&u+t.left<=n+s&&o+t.top<=r+i){e.push($(this).attr('counter'));$(this).css('background-color','red')}else if((t.left<=n&&t.left+u>n||t.left>=n&&t.left<=n+s)&&(t.top<=r&&t.top+o>r||t.top>=r&&t.top<=r+i)){e.push($(this).attr('counter'));$(this).css('background-color','red')}else{}});alert('Visible: '+JSON.stringify(e,null,0))});alert('done!')})</script>");
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			baos.write(doc.toString().getBytes(charset));
