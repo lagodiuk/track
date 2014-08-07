@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -257,12 +258,22 @@ final class HtmlTrackingFilter implements Filter {
 				return counter;
 			}
 
+			int chunkSize = 100;
+
+			while (txt.length() > chunkSize) {
+				TextNode nextNode = textNode.splitText(chunkSize);
+				textNode.wrap("<span class=\"track\" counter=\"" + counter + "\"></span>");
+				counter += 1;
+				textNode = nextNode;
+				txt = textNode.text();
+			}
+
 			textNode.wrap("<span class=\"track\" counter=\"" + counter + "\"></span>");
 			counter += 1;
 
 			return counter;
 		}
-		for (Node n : node.childNodes()) {
+		for (Node n : new ArrayList<>(node.childNodes())) {
 			counter = this.wrapTextNodes(n, counter);
 		}
 		return counter;

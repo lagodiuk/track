@@ -12,7 +12,7 @@ $(document).ready(function() {
 		$('.track').each(function() {
     		
     		var counter = $(this).attr('counter');
-    		if((!visible[counter]) || (visible[counter] < max / 10)) {
+    		if(!visible[counter]) {
     			return;
     		}
     		
@@ -20,7 +20,7 @@ $(document).ready(function() {
     	});		
     });
     
-    window.setTimeout(markVisibleText, 5000);
+    window.setTimeout(markVisibleText, 3000);
 });
 
 var visible = [];
@@ -61,9 +61,6 @@ function markVisibleText() {
         	
         	var acc = visible[counter];
         	acc = acc ? acc + attention : attention;
-        	if(acc > 100) {
-        		acc = 100;
-        	}
         	visible[counter] = acc;
         	
         	console.log( counter + "\t" + attention + "\t" + $(this).text());
@@ -92,10 +89,11 @@ function markVisibleText() {
         }
     });
     
-    window.setTimeout(markVisibleText, 3000);
+    window.setTimeout(markVisibleText, 500);
 }
 
 function calculateAttention(from, to) {
+	/*
 	if(from < 0) {
 		from = 0;
 	}
@@ -109,6 +107,8 @@ function calculateAttention(from, to) {
 		to = 1;
 	}
 	return erf(to - 0.3) - erf(from - 0.3);
+	*/
+	return 0.1;
 }
 
 // http://en.wikipedia.org/wiki/Error_function#Approximation_with_elementary_functions
