@@ -31,24 +31,18 @@ final class HtmlTrackingFilter implements Filter {
 	public void doFilter(final ServletRequest request, final ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
 		final ByteArrayResponse wrappedResponse = new ByteArrayResponse((HttpServletResponse) response);
-
 		final HttpServletRequest wrappedRequest = new Anti304HttpRequestWrapper((HttpServletRequest) request);
 
 		try {
 			chain.doFilter(wrappedRequest, wrappedResponse);
 		} finally {
-			// see: org.eclipse.jetty.servlets.GzipFilter
-
+			// Example of usage of Continuation see in:
+			// org.eclipse.jetty.servlets.GzipFilter
 			Continuation continuation = ContinuationSupport.getContinuation(wrappedRequest);
 
 			if (continuation.isSuspended() && continuation.isResponseWrapped()) {
 
 				continuation.addContinuationListener(new ContinuationListener() {
-					@Override
-					public void onTimeout(Continuation continuation) {
-						System.out.println("TIMEOUT");
-						System.exit(0);
-					}
 
 					@Override
 					public void onComplete(Continuation continuation) {
@@ -56,8 +50,13 @@ final class HtmlTrackingFilter implements Filter {
 							HtmlTrackingFilter.this.process(wrappedRequest, response, wrappedResponse);
 						} catch (Exception e) {
 							e.printStackTrace();
-							System.exit(0);
+							// TODO
 						}
+					}
+
+					@Override
+					public void onTimeout(Continuation continuation) {
+						// TODO
 					}
 				});
 
@@ -65,7 +64,8 @@ final class HtmlTrackingFilter implements Filter {
 				try {
 					this.process(wrappedRequest, response, wrappedResponse);
 				} catch (Exception e) {
-					throw new ServletException(e);
+					e.printStackTrace();
+					// TODO
 				}
 			}
 		}
