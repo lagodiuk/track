@@ -25,6 +25,8 @@ import org.apache.tika.parser.html.HtmlEncodingDetector;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 final class HtmlTrackingFilter implements Filter {
 
@@ -214,7 +216,13 @@ final class HtmlTrackingFilter implements Filter {
 
 	private byte[] processHtmlResponseBody(byte[] body, Charset charset) {
 		try {
-			return body;
+
+			Document doc = Jsoup.parse(new ByteArrayInputStream(body), charset.name(), "");
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			baos.write(doc.toString().getBytes(charset));
+
+			return baos.toByteArray();
 		} catch (Exception e) {
 			return null;
 		}
