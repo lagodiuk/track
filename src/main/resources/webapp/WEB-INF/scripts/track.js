@@ -1,10 +1,31 @@
 $(document).ready(function() {
-    $('button').click(markVisibleText);
+    
+	$('button').click(function(){
+    	
+		var max = 0;
+		for(var i in visible) {
+			if(visible[i] > max) {
+				max = visible[i];
+			}
+		}
+
+		$('.track').each(function() {
+    		
+    		var counter = $(this).attr('counter');
+    		if((!visible[counter]) || (visible[counter] < max / 10)) {
+    			return;
+    		}
+    		
+    		$(this).css('background-color', 'rgba(250, 0, 0, ' + ( visible[counter] / max ) + ')');		
+    	});		
+    });
+    
+    window.setTimeout(markVisibleText, 5000);
 });
 
-function markVisibleText() {
-	var visible = [];
+var visible = [];
 
+function markVisibleText() {
     // check for visible spans with class 'track'   
     $('.track').each(function() {
     	
@@ -16,7 +37,7 @@ function markVisibleText() {
             wH = $(window).height(),
             wW = $(window).width();
         
-        $(this).css('background-color', '');
+        //$(this).css('background-color', '');
         
         if(oH == 0) {
         	return;
@@ -30,13 +51,20 @@ function markVisibleText() {
 
             // fully visible
         	var counter = $(this).attr('counter');
-            visible.push(counter);
-            $(this).css('background-color', 'red');
+
+            //$(this).css('background-color', 'red');
             
             var minY = (pos.top - wY) / wH;
         	var maxY = minY + oH / wH;   
         	
         	var attention = calculateAttention(minY, maxY); 
+        	
+        	var acc = visible[counter];
+        	acc = acc ? acc + attention : attention;
+        	if(acc > 100) {
+        		acc = 100;
+        	}
+        	visible[counter] = acc;
         	
         	console.log( counter + "\t" + attention + "\t" + $(this).text());
             
@@ -47,18 +75,24 @@ function markVisibleText() {
 
         	// partially visible
         	var counter = $(this).attr('counter');
-            visible.push(counter);
-            $(this).css('background-color', 'red');
+
+            //$(this).css('background-color', 'red');
             
             var minY = (pos.top - wY) / wH;
         	var maxY = minY + oH / wH;   
         	
-        	var attention = calculateAttention(minY, maxY);  
+        	var attention = calculateAttention(minY, maxY); 
+        	
+        	var acc = visible[counter];
+        	acc = acc ? acc + attention : attention;
+        	visible[counter] = acc;
         	
         	console.log( counter + "\t" + attention + "\t" + $(this).text());
             
         }
     });
+    
+    window.setTimeout(markVisibleText, 3000);
 }
 
 function calculateAttention(from, to) {
