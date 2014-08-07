@@ -27,6 +27,8 @@ import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
 final class HtmlTrackingFilter implements Filter {
 
@@ -219,6 +221,8 @@ final class HtmlTrackingFilter implements Filter {
 
 			Document doc = Jsoup.parse(new ByteArrayInputStream(body), charset.name(), "");
 
+			this.wrapTextNodes(doc.getElementsByTag("body").first(), 0);
+
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			baos.write(doc.toString().getBytes(charset));
 
@@ -226,5 +230,26 @@ final class HtmlTrackingFilter implements Filter {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+
+	private int wrapTextNodes(Node node, int counter) {
+		if (node instanceof TextNode) {
+
+			TextNode textNode = (TextNode) node;
+
+			String txt = textNode.text();
+			if ((txt == null) || txt.trim().isEmpty()) {
+				return counter;
+			}
+
+			textNode.wrap("<span class=\"track\" counter=\"" + counter + "\"></span>");
+			counter += 1;
+
+			return counter;
+		}
+		for (Node n : node.childNodes()) {
+			counter = this.wrapTextNodes(n, counter);
+		}
+		return counter;
 	}
 }
