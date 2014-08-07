@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -109,6 +110,12 @@ final class HtmlTrackingFilter implements Filter {
 			}
 
 			sb.append("\n").append(new String(bytes, charset)).append("\n");
+
+			bytes = this.processHtmlResponseBody(bytes, charset);
+			System.out.println(sb.toString());
+			response.setContentLength(bytes.length);
+			response.getOutputStream().write(bytes);
+			return;
 		}
 
 		if (type.getSubtype().equals("x-gzip") || type.getSubtype().equals("octet-stream")) {
@@ -128,6 +135,13 @@ final class HtmlTrackingFilter implements Filter {
 					}
 
 					sb.append("\n").append(new String(ungzipped, charset)).append("\n");
+
+					ungzipped = this.processHtmlResponseBody(ungzipped, charset);
+					System.out.println(sb.toString());
+					bytes = this.gzip(ungzipped);
+					response.setContentLength(bytes.length);
+					response.getOutputStream().write(bytes);
+					return;
 				}
 			} catch (Exception e) {
 				// TODO
@@ -142,11 +156,18 @@ final class HtmlTrackingFilter implements Filter {
 					}
 
 					sb.append("\n").append(new String(bytes, charset)).append("\n");
+
+					bytes = this.processHtmlResponseBody(bytes, charset);
+					System.out.println(sb.toString());
+					response.setContentLength(bytes.length);
+					response.getOutputStream().write(bytes);
+					return;
 				}
 			}
 		}
-		System.out.println(sb.toString());
+		// System.out.println(sb.toString());
 
+		response.setContentLength(bytes.length);
 		response.getOutputStream().write(bytes);
 	}
 
@@ -159,6 +180,15 @@ final class HtmlTrackingFilter implements Filter {
 		}
 		byte[] decodedBytes = tmp.toByteArray();
 		return decodedBytes;
+	}
+
+	private byte[] gzip(byte[] bytes) throws Exception {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		GZIPOutputStream gzipOut = new GZIPOutputStream(out);
+		gzipOut.write(bytes);
+		gzipOut.flush();
+		gzipOut.finish();
+		return out.toByteArray();
 	}
 
 	private String getFullURL(HttpServletRequest request) {
@@ -180,5 +210,13 @@ final class HtmlTrackingFilter implements Filter {
 	@Override
 	public void destroy() {
 		// Auto-generated method stub
+	}
+
+	private byte[] processHtmlResponseBody(byte[] body, Charset charset) {
+		try {
+			return body;
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }
