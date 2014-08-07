@@ -217,7 +217,7 @@ final class HtmlTrackingFilter implements Filter {
 		// Auto-generated method stub
 	}
 
-	private byte[] processHtmlResponseBody(byte[] responseBody, Charset charset) {
+	protected byte[] processHtmlResponseBody(byte[] responseBody, Charset charset) {
 		try {
 
 			Document doc = Jsoup.parse(new ByteArrayInputStream(responseBody), charset.name(), "");
@@ -232,9 +232,11 @@ final class HtmlTrackingFilter implements Filter {
 
 			head.appendElement("script")
 					.attr("type", "text/javascript")
-					.attr("src", "http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js");
+					.attr("src", "http://localhost:10000/s/jquery.2.1.0.min.js");
 
-			head.append("<script type=\"text/javascript\">$(document).ready(function(){$('button').click(function(){var e=[];$('.track').each(function(){var t=$(this).offset(),n=$(window).scrollLeft(),r=$(window).scrollTop(),i=$(window).height(),s=$(window).width(),o=$(this).outerHeight(),u=$(this).outerWidth();$(this).css('background-color','');if(t.left>=n&&t.top>=r&&u+t.left<=n+s&&o+t.top<=r+i){e.push($(this).attr('counter'));$(this).css('background-color','red')}else if((t.left<=n&&t.left+u>n||t.left>=n&&t.left<=n+s)&&(t.top<=r&&t.top+o>r||t.top>=r&&t.top<=r+i)){e.push($(this).attr('counter'));$(this).css('background-color','red')}else{}});alert('Visible: '+JSON.stringify(e,null,0))});alert('done!')})</script>");
+			head.appendElement("script")
+					.attr("type", "text/javascript")
+					.attr("src", "http://localhost:10000/s/track.js");
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			baos.write(doc.toString().getBytes(charset));

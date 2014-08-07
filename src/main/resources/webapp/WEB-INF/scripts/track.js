@@ -33,5 +33,5 @@ $(document).ready(function(){
 	    alert('Visible: ' + JSON.stringify(visible, null, 0));
 	});
     
-    alert('done!')
+    alert('done! : )')
 });

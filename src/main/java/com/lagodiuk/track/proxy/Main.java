@@ -15,6 +15,14 @@ import org.eclipse.jetty.servlets.ProxyServlet;
 public class Main {
 
 	public static void main(String... args) throws Exception {
+
+		new Thread() {
+			@Override
+			public void run() {
+				com.lagodiuk.track.Main.main(new String[]{});
+			};
+		}.start();
+
 		Server server = new Server(8080);
 
 		ServletHandler servletHandler = new ServletHandler();
