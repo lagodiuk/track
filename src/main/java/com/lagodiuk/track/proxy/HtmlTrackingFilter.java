@@ -250,7 +250,9 @@ public class HtmlTrackingFilter implements Filter {
 
 			head.appendElement("script")
 					.attr("type", "text/javascript")
-					.text("var backendUrl = 'http://" + hostName + ":" + port + "'");
+					.text(new StringBuilder()
+							.append("var backendUrl = 'http://").append(hostName).append(":").append(port).append("'; ")
+							.toString());
 
 			head.appendElement("script")
 					.attr("type", "text/javascript")

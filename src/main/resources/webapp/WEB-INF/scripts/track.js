@@ -56,7 +56,8 @@ $(document).ready(function() {
 	window.addEventListener("beforeunload", function(e){
 		var postData = {
 				attentionDistribution: visible,
-				url: 'hello world'
+				// http://stackoverflow.com/questions/5817505/is-there-any-method-to-get-url-without-query-string-in-java-script/5817548#5817548
+				url: window.location.href.split('?')[0]
 			};
 			
 			$.ajax({
