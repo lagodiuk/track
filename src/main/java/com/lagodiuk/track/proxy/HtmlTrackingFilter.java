@@ -275,7 +275,10 @@ final class HtmlTrackingFilter implements Filter {
 				txt = textNode.text();
 			}
 
-			textNode.wrap("<span class=\"track\" counter=\"" + counter + "\"></span>");
+			textNode.wrap(new Element(Tag.valueOf("span"), textNode.baseUri())
+					.attr("class", "track")
+					.attr("counter", "" + counter)
+					.toString());
 			counter += 1;
 
 			return counter;
