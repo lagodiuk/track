@@ -8,11 +8,11 @@ var displayingDistribution = false;
 
 $(document).ready(function() {
 	
-	// alert(backendUrl);
-	
 	if(typeof document.track_initialized !== 'undefined') {
 		return;
 	}
+	
+	// Here we have access to variable: backendUrl - it was injected by proxy filter
 	
 	document.track_initialized = true;
 	
@@ -51,12 +51,34 @@ $(document).ready(function() {
     		$(this).css('background-color', 'rgba(250, 0, 0, ' + ( visible[counter] / max ) + ')');		
     	});		
     });
+	
+	// when user leave page - send information about attention distribution
+	window.addEventListener("beforeunload", function(e){
+		var postData = {
+			attentionDistribution: visible,
+			url: 'hello world'
+		};
+		
+		$.ajax({
+            type: 'POST',
+            url: backendUrl + '/track',
+            dataType : 'json',
+            data: postData,         
+            success: function(data){
+                alert(data);
+            },
+            error: function(){
+                alert('error!');
+            }
+        });
+	}, false);
     
     window.setTimeout(markVisibleText, 3000);
 });
 
 function markVisibleText() {
 	
+	// when tab is invisible - do nothing
 	if(displayingDistribution || (!isTabVisible())) {
 		window.setTimeout(markVisibleText, 500);
 		return;

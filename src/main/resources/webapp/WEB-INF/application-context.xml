@@ -19,6 +19,9 @@
 			expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
 	<context:annotation-config />
+	
+	<!-- http://stackoverflow.com/questions/16190699/automatically-add-header-to-every-response/16191770#16191770 -->
+	<bean id="corsFilter" class="com.lagodiuk.track.controller.CorsFilter" />
 
 	<task:scheduler id="myScheduler" pool-size="10" />
 	<task:annotation-driven scheduler="myScheduler" />

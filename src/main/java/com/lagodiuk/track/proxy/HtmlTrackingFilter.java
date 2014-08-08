@@ -86,6 +86,8 @@ public class HtmlTrackingFilter implements Filter {
 		HttpServletRequest hreq = (HttpServletRequest) request;
 		HttpServletResponse hresp = (HttpServletResponse) response;
 
+		this.allowCrossdomainAjax(hresp);
+
 		String url = this.getFullURL(hreq);
 
 		Metadata metadata = new Metadata();
@@ -176,6 +178,15 @@ public class HtmlTrackingFilter implements Filter {
 
 		response.setContentLength(bytes.length);
 		response.getOutputStream().write(bytes);
+	}
+
+	// http://stackoverflow.com/questions/4508198/how-to-use-type-post-in-jsonp-ajax-call/4528304#4528304
+	// http://stackoverflow.com/questions/4508198/how-to-use-type-post-in-jsonp-ajax-call/17722058#17722058
+	private void allowCrossdomainAjax(HttpServletResponse response) {
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+		response.setHeader("Access-Control-Allow-Methods", "POST");
+		response.setHeader("Access-Control-Max-Age", "1000");
 	}
 
 	private byte[] unGzip(byte[] bytes) throws Exception {
