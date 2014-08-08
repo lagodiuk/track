@@ -18,14 +18,11 @@ import com.lagodiuk.track.proxy.HtmlTrackingFilter;
 public class Main {
 
 	public static void main(String... args) throws Exception {
+		launchBackend();
+		launchProxy();
+	}
 
-		new Thread() {
-			@Override
-			public void run() {
-				new ClassPathXmlApplicationContext("app.xml");
-			};
-		}.start();
-
+	private static void launchProxy() throws Exception, InterruptedException {
 		Server server = new Server(8080);
 
 		ServletHandler servletHandler = new ServletHandler();
@@ -35,5 +32,14 @@ public class Main {
 		server.setHandler(servletHandler);
 		server.start();
 		server.join();
+	}
+
+	private static void launchBackend() {
+		new Thread() {
+			@Override
+			public void run() {
+				new ClassPathXmlApplicationContext("app.xml");
+			};
+		}.start();
 	}
 }
