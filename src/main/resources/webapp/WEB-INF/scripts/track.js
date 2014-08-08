@@ -55,27 +55,29 @@ $(document).ready(function() {
 	// when user leave page - send information about attention distribution
 	window.addEventListener("beforeunload", function(e){
 		var postData = {
-			attentionDistribution: visible,
-			url: 'hello world'
-		};
-		
-		$.ajax({
-			// http://stackoverflow.com/questions/11492325/post-json-fails-with-415-unsupported-media-type-spring-3-mvc/11549679#11549679
-			headers: { 
-		        'Accept': 'application/json',
-		        'Content-Type': 'application/json' 
-		    },
-            type: 'POST',
-            url: backendUrl + '/track',
-            dataType : 'json',
-            data: postData,         
-            success: function(data){
-                alert(data);
-            },
-            error: function(){
-                alert('error!');
-            }
-        });
+				attentionDistribution: visible,
+				url: 'hello world'
+			};
+			
+			$.ajax({
+				// http://stackoverflow.com/questions/11492325/post-json-fails-with-415-unsupported-media-type-spring-3-mvc/11549679#11549679
+				headers: { 
+			        'Accept': 'application/json',
+			        'Content-Type': 'application/json' 
+			    },
+	            type: 'POST',
+	            // http://stackoverflow.com/questions/4945932/window-onbeforeunload-ajax-request-problem-with-chrome/10952466#10952466
+	            async: false,
+	            url: backendUrl + '/track',
+	            dataType : 'json',
+	            data: JSON.stringify(postData),         
+	            success: function(data){
+	                // alert(data);
+	            },
+	            error: function(e){
+	                alert('error!' + JSON.stringify(e));
+	            }
+	        });
 	}, false);
     
     window.setTimeout(markVisibleText, 3000);
