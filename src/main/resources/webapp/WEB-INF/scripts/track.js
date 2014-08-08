@@ -3,6 +3,18 @@ var visible = [];
 var displayingDistribution = false;
 
 $(document).ready(function() {
+	
+	if(typeof document.track_initialized !== 'undefined') {
+		return;
+	}
+	
+	document.track_initialized = true;
+	
+	$('.track-button').each(function(i, obj) {
+		if( i > 0) {
+			$(this).remove();
+		}
+	});
     
 	$('.track-button').click(function(){
 		
