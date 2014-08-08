@@ -121,7 +121,7 @@ public class HtmlTrackingFilter implements Filter {
 			sb.append("\n").append(new String(bytes, charset)).append("\n");
 
 			bytes = this.processHtmlResponseBody(bytes, charset);
-			System.out.println(sb.toString());
+			// System.out.println(sb.toString());
 			response.setContentLength(bytes.length);
 			response.getOutputStream().write(bytes);
 			return;
@@ -146,7 +146,7 @@ public class HtmlTrackingFilter implements Filter {
 					sb.append("\n").append(new String(ungzipped, charset)).append("\n");
 
 					ungzipped = this.processHtmlResponseBody(ungzipped, charset);
-					System.out.println(sb.toString());
+					// System.out.println(sb.toString());
 					bytes = this.gzip(ungzipped);
 					response.setContentLength(bytes.length);
 					response.getOutputStream().write(bytes);
@@ -167,7 +167,7 @@ public class HtmlTrackingFilter implements Filter {
 					sb.append("\n").append(new String(bytes, charset)).append("\n");
 
 					bytes = this.processHtmlResponseBody(bytes, charset);
-					System.out.println(sb.toString());
+					// System.out.println(sb.toString());
 					response.setContentLength(bytes.length);
 					response.getOutputStream().write(bytes);
 					return;

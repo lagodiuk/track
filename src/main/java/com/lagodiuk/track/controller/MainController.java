@@ -1,7 +1,5 @@
 package com.lagodiuk.track.controller;
 
-import java.util.HashMap;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,12 +17,8 @@ public class MainController {
 
 	@RequestMapping(value = "/track", method = {RequestMethod.POST})
 	@ResponseBody
-	public String getAttentionDistribution(@RequestBody HashMap<?, ?> requestBody) {
-		for (Object k : requestBody.keySet()) {
-			System.out.println(k);
-			System.out.println(requestBody.get(k));
-			System.out.println();
-		}
+	public String getAttentionDistribution(@RequestBody TrackingInfo trackingInfo) {
+		System.out.println(trackingInfo);
 		return "Ok";
 	}
 

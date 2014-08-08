@@ -2,7 +2,7 @@
 // http://stackoverflow.com/questions/9271747/can-i-detect-the-user-viewable-area-on-the-browser
 // http://jsfiddle.net/Ua37w/8/
 
-var visible = [];
+var visible = {};
 
 var displayingDistribution = false;
 
