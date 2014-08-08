@@ -8,6 +8,8 @@ var displayingDistribution = false;
 
 $(document).ready(function() {
 	
+	// alert(backendUrl);
+	
 	if(typeof document.track_initialized !== 'undefined') {
 		return;
 	}
