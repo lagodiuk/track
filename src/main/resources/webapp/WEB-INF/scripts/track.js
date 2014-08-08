@@ -93,34 +93,7 @@ function markVisibleText() {
 }
 
 function calculateAttention(from, to) {
-	/*
-	if(from < 0) {
-		from = 0;
-	}
-	if(from > 1) {
-		from = 1;
-	}
-	if(to < 0) {
-		to = 0;
-	}
-	if(to > 1) {
-		to = 1;
-	}
-	return erf(to - 0.3) - erf(from - 0.3);
-	*/
-	return 0.1;
-}
-
-// http://en.wikipedia.org/wiki/Error_function#Approximation_with_elementary_functions
-function erf(x) {
-	var a = [0.078108, 0.000972, 0.230389, 0.278393];
-	var denom = 0;
-	for(var i in a) {
-		denom += a[i];
-		denom *= x;
-	}
-	denom += 1;
-	var denom2 = denom * denom;
-	var denom4 = denom2 * denom2;
-	return 1 - 1.0 / denom4;
+	var x = (from + to) / 2;
+	var mostAttention = 0.4;
+	return Math.exp(-(x-mostAttention) * (x-mostAttention) * 8);
 }
