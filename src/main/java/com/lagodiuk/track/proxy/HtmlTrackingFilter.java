@@ -33,7 +33,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Tag;
 
-final class HtmlTrackingFilter implements Filter {
+public class HtmlTrackingFilter implements Filter {
 
 	@Override
 	public void doFilter(final ServletRequest request, final ServletResponse response, FilterChain chain) throws IOException, ServletException {
