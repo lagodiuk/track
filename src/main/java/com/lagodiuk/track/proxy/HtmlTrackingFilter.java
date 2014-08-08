@@ -31,6 +31,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Tag;
 
 final class HtmlTrackingFilter implements Filter {
 
@@ -263,7 +264,12 @@ final class HtmlTrackingFilter implements Filter {
 
 			while (txt.length() > chunkSize) {
 				TextNode nextNode = textNode.splitText(chunkSize);
-				textNode.wrap("<span class=\"track\" counter=\"" + counter + "\"></span>");
+
+				textNode.wrap(new Element(Tag.valueOf("span"), textNode.baseUri())
+						.attr("class", "track")
+						.attr("counter", "" + counter)
+						.toString());
+
 				counter += 1;
 				textNode = nextNode;
 				txt = textNode.text();
