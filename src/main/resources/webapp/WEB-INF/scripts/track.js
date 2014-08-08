@@ -60,46 +60,33 @@ function markVisibleText() {
         	return;
         }
 
-        // check the edges
-        if ( ( pos.left >= wX ) && 
+
+        if ( // TODO: refactoring
+                // fully visible		
+        		( ( pos.left >= wX ) && 
         		( pos.top >= wY ) && 
         		( oW + pos.left <= wX + wW ) && 
-        		( oH + pos.top <= wY + wH ) ) {
-
-            // fully visible
-        	var counter = $(this).attr('counter');
-            
-            var minY = (pos.top - wY) / wH;
-        	var maxY = minY + oH / wH;   
-        	
-        	var attention = calculateAttention(minY, maxY); 
-        	
-        	var acc = visible[counter];
-        	acc = acc ? acc + attention : attention;
-        	visible[counter] = acc;
-        	
-        	console.log( counter + "\t" + attention + "\t" + $(this).text());
-            
-        } else if ( ( ( ( pos.left <= wX ) && ( pos.left + oW > wX ) ) || 
-        				( ( pos.left >= wX ) && ( pos.left <= wX + wW ) ) ) && 
-        		( ( ( pos.top <= wY ) && ( pos.top + oH > wY ) ) || 
-        				( ( pos.top >= wY ) && ( pos.top <= wY + wH ) ) ) ) {
-
-        	// partially visible
-        	var counter = $(this).attr('counter');
-            
-            var minY = (pos.top - wY) / wH;
-        	var maxY = minY + oH / wH;   
-        	
-        	var attention = calculateAttention(minY, maxY); 
-        	
-        	var acc = visible[counter];
-        	acc = acc ? acc + attention : attention;
-        	visible[counter] = acc;
-        	
-        	console.log( counter + "\t" + attention + "\t" + $(this).text());
-            
-        }
+        		( oH + pos.top <= wY + wH ) )
+        	||
+        		// partially visible
+        		( ( ( ( ( pos.left <= wX ) && ( pos.left + oW > wX ) ) || 
+        		( ( pos.left >= wX ) && ( pos.left <= wX + wW ) ) ) && 
+                ( ( ( pos.top <= wY ) && ( pos.top + oH > wY ) ) || 
+                ( ( pos.top >= wY ) && ( pos.top <= wY + wH ) ) ) ) )
+        	) {
+	        	var counter = $(this).attr('counter');
+	            
+	            var minY = (pos.top - wY) / wH;
+	        	var maxY = minY + oH / wH;   
+	        	
+	        	var attention = calculateAttention(minY, maxY); 
+	        	
+	        	var acc = visible[counter];
+	        	acc = acc ? acc + attention : attention;
+	        	visible[counter] = acc;
+	        	
+	        	console.log( counter + "\t" + attention + "\t" + $(this).text());        
+        	}
     });
     
     window.setTimeout(markVisibleText, 500);
