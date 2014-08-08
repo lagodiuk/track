@@ -228,6 +228,10 @@ public class HtmlTrackingFilter implements Filter {
 
 			this.wrapTextNodes(body, 0);
 
+			// TODO
+			String hostName = "localhost";
+			int port = 10000;
+
 			body.appendElement("button")
 					.attr("class", "track-button")
 					.attr("style", "position:fixed; top:0px;left:0px; z-index:200")
@@ -235,11 +239,11 @@ public class HtmlTrackingFilter implements Filter {
 
 			head.appendElement("script")
 					.attr("type", "text/javascript")
-					.attr("src", "http://localhost:10000/s/jquery.2.1.0.min.js");
+					.attr("src", "http://" + hostName + ":" + port + "/s/jquery.2.1.0.min.js");
 
 			head.appendElement("script")
 					.attr("type", "text/javascript")
-					.attr("src", "http://localhost:10000/s/track.js");
+					.attr("src", "http://" + hostName + ":" + port + "/s/track.js");
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			baos.write(doc.toString().getBytes(charset));
