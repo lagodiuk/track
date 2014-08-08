@@ -60,6 +60,11 @@ $(document).ready(function() {
 		};
 		
 		$.ajax({
+			// http://stackoverflow.com/questions/11492325/post-json-fails-with-415-unsupported-media-type-spring-3-mvc/11549679#11549679
+			headers: { 
+		        'Accept': 'application/json',
+		        'Content-Type': 'application/json' 
+		    },
             type: 'POST',
             url: backendUrl + '/track',
             dataType : 'json',
