@@ -1,6 +1,20 @@
+var visible = [];
+
+var displayingDistribution = false;
+
 $(document).ready(function() {
     
-	$('button').click(function(){
+	$('.track-button').click(function(){
+		
+		if(displayingDistribution) {
+			$('.track').each(function() {
+				$(this).css('background-color', '');
+			});
+			displayingDistribution = false;
+			return;
+		} else {
+			displayingDistribution = true;
+		}
     	
 		var max = 0;
 		for(var i in visible) {
@@ -23,9 +37,14 @@ $(document).ready(function() {
     window.setTimeout(markVisibleText, 3000);
 });
 
-var visible = [];
-
 function markVisibleText() {
+	
+	if(displayingDistribution) {
+		window.setTimeout(markVisibleText, 500);
+		return;
+	}
+	
+	
     // check for visible spans with class 'track'   
     $('.track').each(function() {
     	
@@ -36,8 +55,6 @@ function markVisibleText() {
             wY = $(window).scrollTop(),
             wH = $(window).height(),
             wW = $(window).width();
-        
-        //$(this).css('background-color', '');
         
         if(oH == 0) {
         	return;
@@ -51,8 +68,6 @@ function markVisibleText() {
 
             // fully visible
         	var counter = $(this).attr('counter');
-
-            //$(this).css('background-color', 'red');
             
             var minY = (pos.top - wY) / wH;
         	var maxY = minY + oH / wH;   
@@ -72,8 +87,6 @@ function markVisibleText() {
 
         	// partially visible
         	var counter = $(this).attr('counter');
-
-            //$(this).css('background-color', 'red');
             
             var minY = (pos.top - wY) / wH;
         	var maxY = minY + oH / wH;   

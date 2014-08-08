@@ -228,6 +228,7 @@ final class HtmlTrackingFilter implements Filter {
 			this.wrapTextNodes(body, 0);
 
 			body.appendElement("button")
+					.attr("class", "track-button")
 					.attr("style", "position:fixed; top:0px;left:0px; z-index:200")
 					.text("What do I see?");
 
