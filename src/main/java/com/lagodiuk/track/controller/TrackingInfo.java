@@ -24,4 +24,14 @@ public class TrackingInfo {
 		return "TrackingInfo [url=" + this.url + ", attentionDistribution=" + this.attentionDistribution + "]";
 	}
 
+	public void normalize() {
+		double sum = 0;
+		for (double val : this.attentionDistribution.values()) {
+			sum += val;
+		}
+		for (Integer key : this.attentionDistribution.keySet()) {
+			double value = this.attentionDistribution.get(key);
+			this.attentionDistribution.put(key, value / sum);
+		}
+	}
 }
