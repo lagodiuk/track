@@ -52,6 +52,34 @@ $(document).ready(function() {
     	});		
     });
 	
+	$('.track-button-attention').click(function(){
+		
+		if(displayingDistribution) {
+			$('.track').each(function() {
+				$(this).css('background-color', '');
+			});
+			displayingDistribution = false;
+			return;
+		} else {
+			displayingDistribution = true;
+		}
+    	
+		var max = 0;
+		$('.track').each(function() {
+			var attention = $(this).attr('attention');
+			if(attention > max) {
+				max = attention;
+			}
+		});
+
+		$('.track').each(function() {
+    		
+			var attention = $(this).attr('attention');
+    		
+    		$(this).css('background-color', 'rgba(0, 250, 0, ' + ( attention / max ) + ')');		
+    	});		
+    });
+	
 	// when user leave page - send information about attention distribution
 	window.addEventListener("beforeunload", function(e){
 		var postData = {

@@ -25,13 +25,13 @@ public class TrackingInfo {
 	}
 
 	public void normalize() {
-		double sum = 0;
+		double max = 0.001;
 		for (double val : this.attentionDistribution.values()) {
-			sum += val;
+			max = Math.max(val, max);
 		}
 		for (Integer key : this.attentionDistribution.keySet()) {
 			double value = this.attentionDistribution.get(key);
-			this.attentionDistribution.put(key, value / sum);
+			this.attentionDistribution.put(key, value / max);
 		}
 	}
 }

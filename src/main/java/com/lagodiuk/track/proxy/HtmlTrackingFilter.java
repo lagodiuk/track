@@ -33,6 +33,8 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Tag;
 
+import com.lagodiuk.track.storage.Storage;
+
 public class HtmlTrackingFilter implements Filter {
 
 	@Override
@@ -120,7 +122,7 @@ public class HtmlTrackingFilter implements Filter {
 
 			sb.append("\n").append(new String(bytes, charset)).append("\n");
 
-			bytes = this.processHtmlResponseBody(bytes, charset);
+			bytes = this.processHtmlResponseBody(bytes, charset, hreq);
 			// System.out.println(sb.toString());
 			response.setContentLength(bytes.length);
 			response.getOutputStream().write(bytes);
@@ -145,7 +147,7 @@ public class HtmlTrackingFilter implements Filter {
 
 					sb.append("\n").append(new String(ungzipped, charset)).append("\n");
 
-					ungzipped = this.processHtmlResponseBody(ungzipped, charset);
+					ungzipped = this.processHtmlResponseBody(ungzipped, charset, hreq);
 					// System.out.println(sb.toString());
 					bytes = this.gzip(ungzipped);
 					response.setContentLength(bytes.length);
@@ -166,7 +168,7 @@ public class HtmlTrackingFilter implements Filter {
 
 					sb.append("\n").append(new String(bytes, charset)).append("\n");
 
-					bytes = this.processHtmlResponseBody(bytes, charset);
+					bytes = this.processHtmlResponseBody(bytes, charset, hreq);
 					// System.out.println(sb.toString());
 					response.setContentLength(bytes.length);
 					response.getOutputStream().write(bytes);
@@ -230,14 +232,14 @@ public class HtmlTrackingFilter implements Filter {
 		// Auto-generated method stub
 	}
 
-	protected byte[] processHtmlResponseBody(byte[] responseBody, Charset charset) {
+	protected byte[] processHtmlResponseBody(byte[] responseBody, Charset charset, HttpServletRequest request) {
 		try {
 
 			Document doc = Jsoup.parse(new ByteArrayInputStream(responseBody), charset.name(), "");
 			Element body = doc.getElementsByTag("body").first();
 			Element head = doc.getElementsByTag("head").first();
 
-			this.wrapTextNodes(body, 0);
+			this.wrapTextNodes(body, 0, request.getRequestURL().toString());
 
 			// TODO
 			String hostName = "localhost";
@@ -247,6 +249,11 @@ public class HtmlTrackingFilter implements Filter {
 					.attr("class", "track-button")
 					.attr("style", "position:fixed; top:0px;left:0px; z-index:200")
 					.text("What do I see?");
+
+			body.appendElement("button")
+					.attr("class", "track-button-attention")
+					.attr("style", "position:fixed; top:40px;left:0px; z-index:200")
+					.text("What do people see?");
 
 			head.appendElement("script")
 					.attr("type", "text/javascript")
@@ -271,7 +278,7 @@ public class HtmlTrackingFilter implements Filter {
 		}
 	}
 
-	private int wrapTextNodes(Node node, int counter) {
+	private int wrapTextNodes(Node node, int counter, String url) {
 		if (node instanceof TextNode) {
 
 			TextNode textNode = (TextNode) node;
@@ -286,9 +293,15 @@ public class HtmlTrackingFilter implements Filter {
 			while (txt.length() > chunkSize) {
 				TextNode nextNode = textNode.splitText(chunkSize);
 
+				Double statisticalAttention = Storage.getAttentionDistribution(url).get(counter);
+				if (statisticalAttention == null) {
+					statisticalAttention = 1e-3;
+				}
+
 				textNode.wrap(new Element(Tag.valueOf("span"), textNode.baseUri())
 						.attr("class", "track")
 						.attr("counter", "" + counter)
+						.attr("attention", "" + statisticalAttention)
 						.toString());
 
 				counter += 1;
@@ -296,16 +309,22 @@ public class HtmlTrackingFilter implements Filter {
 				txt = textNode.text();
 			}
 
+			Double statisticalAttention = Storage.getAttentionDistribution(url).get(counter);
+			if (statisticalAttention == null) {
+				statisticalAttention = 1e-3;
+			}
+
 			textNode.wrap(new Element(Tag.valueOf("span"), textNode.baseUri())
 					.attr("class", "track")
 					.attr("counter", "" + counter)
+					.attr("attention", "" + statisticalAttention)
 					.toString());
 			counter += 1;
 
 			return counter;
 		}
 		for (Node n : new ArrayList<>(node.childNodes())) {
-			counter = this.wrapTextNodes(n, counter);
+			counter = this.wrapTextNodes(n, counter, url);
 		}
 		return counter;
 	}

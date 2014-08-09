@@ -1,5 +1,6 @@
 package com.lagodiuk.track.storage;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,7 +10,7 @@ public class Storage {
 
 	private static Map<String, Map<Integer, Double>> urlToAttentionDistribution = new HashMap<>();
 
-	public static void save(TrackingInfo trackingInfo) {
+	public static synchronized void save(TrackingInfo trackingInfo) {
 		trackingInfo.normalize();
 
 		String url = trackingInfo.getUrl();
@@ -30,6 +31,14 @@ public class Storage {
 		}
 
 		System.out.println("Saved: " + url);
+	}
+
+	public static synchronized Map<Integer, Double> getAttentionDistribution(String url) {
+		if (urlToAttentionDistribution.containsKey(url)) {
+			return urlToAttentionDistribution.get(url);
+		} else {
+			return Collections.emptyMap();
+		}
 	}
 
 }
