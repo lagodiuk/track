@@ -76,7 +76,7 @@ $(document).ready(function() {
     		
 			var attention = $(this).attr('attention');
     		
-    		$(this).css('background-color', 'rgba(0, 250, 0, ' + ( attention / max ) + ')');		
+    		$(this).css('background-color', 'rgba(0, 100, 200, ' + ( attention / max ) + ')');		
     	});		
     });
 	
@@ -171,7 +171,7 @@ function markVisibleText() {
 function calculateAttention(from, to) {
 	var x = (from + to) / 2;
 	var mostAttention = 0.4;
-	return Math.exp(-(x-mostAttention) * (x-mostAttention) * 8);
+	return Math.exp(-(x-mostAttention) * (x-mostAttention) * 10);
 }
 
 // http://stackoverflow.com/questions/19519535/detect-if-browser-tab-is-active-or-user-has-switched-away/19519701#19519701
